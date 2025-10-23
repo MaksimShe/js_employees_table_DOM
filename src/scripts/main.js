@@ -4,7 +4,6 @@ const body = document.querySelector('body');
 const table = document.querySelector('table');
 const tbody = table.querySelector('tbody');
 const headers = table.querySelectorAll('thead th');
-const allRows = tbody.querySelectorAll('tr');
 
 const officesLocation = [
   `Tokyo`,
@@ -16,8 +15,21 @@ const officesLocation = [
 ];
 
 const notificationTypes = {
-  succes: { title: 'Success!', description: 'User was added!' },
-  error: { title: 'Error!', description: 'Please, fill all inputs!' },
+  success: {
+    name: 'success',
+    title: 'Success!',
+    description: 'User was added!',
+  },
+  warning: {
+    name: 'warning',
+    title: 'Warning!',
+    description: 'Not correct age or name!',
+  },
+  error: {
+    name: 'error',
+    title: 'Error!',
+    description: 'Please, fill all inputs!',
+  },
 };
 
 let sortedBy = '';
@@ -25,13 +37,15 @@ let prevActiveRow = '';
 
 // #sorting rows
 headers.forEach((header, index) => {
+  const updatedTbody = document.querySelector('tbody');
+
   header.addEventListener('click', () => {
-    const rows = [...tbody.querySelectorAll('tr')];
+    const rows = [...updatedTbody.querySelectorAll('tr')];
 
     if (sortedBy === header.textContent) {
-      tbody.innerHTML = '';
+      updatedTbody.innerHTML = '';
       rows.reverse();
-      rows.forEach((row) => tbody.appendChild(row));
+      rows.forEach((row) => updatedTbody.appendChild(row));
 
       return;
     }
@@ -54,28 +68,32 @@ headers.forEach((header, index) => {
       return cellA.localeCompare(cellB);
     });
 
-    tbody.innerHTML = '';
-    rows.forEach((row) => tbody.appendChild(row));
+    updatedTbody.innerHTML = '';
+    rows.forEach((row) => updatedTbody.appendChild(row));
     sortedBy = header.textContent;
   });
 });
 
 // #selecting row
-allRows.forEach((selectedRow) => {
-  selectedRow.addEventListener('click', (clickedRow) => {
-    if (prevActiveRow) {
-      prevActiveRow.removeAttribute('class');
-    }
+tbody.addEventListener('click', (click) => {
+  const clickedRow = click.target.closest('tr');
 
-    if (selectedRow === prevActiveRow) {
-      selectedRow.removeAttribute('class');
+  if (!clickedRow) {
+    return;
+  }
 
-      return;
-    }
+  if (prevActiveRow) {
+    prevActiveRow.classList.remove('active');
+  }
 
-    selectedRow.setAttribute('class', 'active');
-    prevActiveRow = selectedRow;
-  });
+  if (clickedRow === prevActiveRow) {
+    prevActiveRow = '';
+
+    return;
+  }
+
+  clickedRow.classList.add('active');
+  prevActiveRow = clickedRow;
 });
 
 // #creating form
@@ -181,10 +199,10 @@ function createUser(user) {
     newUser.append(newCell);
   }
 
-  tbody.append(newUser);
+  document.querySelector('tbody').append(newUser);
 }
 
-function createNotification(type, isSuccess) {
+function createNotification(type) {
   const notify = document.createElement('notification');
 
   notify.setAttribute('data-qa', 'notification');
@@ -194,12 +212,7 @@ function createNotification(type, isSuccess) {
     <p class="text">${type.description}</p>
   `;
 
-  notify.className = 'notification';
-
-  // eslint-disable-next-line no-unused-expressions
-  isSuccess
-    ? (notify.className = 'notification success')
-    : (notify.className = 'notification error');
+  notify.className = `notification ${type.name}`;
 
   body.append(notify);
 
@@ -225,11 +238,11 @@ button.addEventListener('click', (eventBtn) => {
   newUser.userAge = document.querySelector('[name="age"]').value;
   newUser.userSalary = document.querySelector('[name="salary"]').value;
 
-  let isAllInputsFilled = true;
+  let isAllInputsFilled = notificationTypes.success.name;
 
   for (const userProp in newUser) {
     if (!newUser[userProp]) {
-      isAllInputsFilled = false;
+      isAllInputsFilled = notificationTypes.error.name;
       break;
     }
   }
@@ -239,14 +252,16 @@ button.addEventListener('click', (eventBtn) => {
     newUser.userAge > 90 ||
     newUser.userName.length < 4
   ) {
-    isAllInputsFilled = false;
+    isAllInputsFilled = notificationTypes.warning.name;
   }
 
-  if (isAllInputsFilled) {
+  if (isAllInputsFilled === notificationTypes.success.name) {
     clearAllInputs();
     createUser(newUser);
-    createNotification(notificationTypes.succes, true);
+    createNotification(notificationTypes.success);
+  } else if (isAllInputsFilled === notificationTypes.warning.name) {
+    createNotification(notificationTypes.warning);
   } else {
-    createNotification(notificationTypes.error, false);
+    createNotification(notificationTypes.error);
   }
 });
