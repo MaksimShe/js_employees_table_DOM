@@ -4,6 +4,8 @@ const body = document.querySelector('body');
 const table = document.querySelector('table');
 const tbody = table.querySelector('tbody');
 const headers = table.querySelectorAll('thead th');
+let sortedBy = '';
+let prevActiveRow = '';
 
 const officesLocation = [
   `Tokyo`,
@@ -21,7 +23,7 @@ const notificationTypes = {
     description: 'User was added!',
   },
   warning: {
-    name: 'warning',
+    name: 'error',
     title: 'Warning!',
     description: 'Not correct age or name!',
   },
@@ -31,9 +33,6 @@ const notificationTypes = {
     description: 'Please, fill all inputs!',
   },
 };
-
-let sortedBy = '';
-let prevActiveRow = '';
 
 // #sorting rows
 headers.forEach((header, index) => {
@@ -157,6 +156,8 @@ function createForm() {
 
   const submitBtn = document.createElement('button');
 
+  submitBtn.setAttribute('class', 'button__submit_form');
+
   submitBtn.textContent = 'Save to table';
 
   form.append(
@@ -203,7 +204,7 @@ function createUser(user) {
 }
 
 function createNotification(type) {
-  const notify = document.createElement('notification');
+  const notify = document.createElement('div');
 
   notify.setAttribute('data-qa', 'notification');
 
@@ -223,7 +224,7 @@ function createNotification(type) {
 
 createForm();
 
-const button = document.querySelector('button');
+const button = document.querySelector('.button__submit_form');
 
 button.addEventListener('click', (eventBtn) => {
   eventBtn.preventDefault();
@@ -238,13 +239,19 @@ button.addEventListener('click', (eventBtn) => {
   newUser.userAge = document.querySelector('[name="age"]').value;
   newUser.userSalary = document.querySelector('[name="salary"]').value;
 
-  let isAllInputsFilled = notificationTypes.success.name;
+  let fornInputsStatus = notificationTypes.success.name;
 
   for (const userProp in newUser) {
     if (!newUser[userProp]) {
-      isAllInputsFilled = notificationTypes.error.name;
+      fornInputsStatus = notificationTypes.error.name;
       break;
     }
+  }
+
+  if (fornInputsStatus === notificationTypes.error.name) {
+    createNotification(notificationTypes.error);
+
+    return;
   }
 
   if (
@@ -252,16 +259,14 @@ button.addEventListener('click', (eventBtn) => {
     newUser.userAge > 90 ||
     newUser.userName.length < 4
   ) {
-    isAllInputsFilled = notificationTypes.warning.name;
+    fornInputsStatus = notificationTypes.warning.name;
   }
 
-  if (isAllInputsFilled === notificationTypes.success.name) {
+  if (fornInputsStatus === notificationTypes.success.name) {
     clearAllInputs();
     createUser(newUser);
     createNotification(notificationTypes.success);
-  } else if (isAllInputsFilled === notificationTypes.warning.name) {
-    createNotification(notificationTypes.warning);
   } else {
-    createNotification(notificationTypes.error);
+    createNotification(notificationTypes.warning);
   }
 });
